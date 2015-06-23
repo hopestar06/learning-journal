@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 import os
 import datetime
@@ -7,11 +8,9 @@ from sqlalchemy import Column, Integer, String, Text, DateTime
 from pyramid.config import Configurator
 from pyramid.view import view_config
 from waitress import serve
+
 Base = declarative_base()
-
-# -*- coding: utf-8 -*-
-
-
+DATABASE_URL = os.environ.get('DATABASE_URL','postgresql://muoily@localhost:5432/learning-journal')
 
 class Entry(Base):
     __tablename__ = 'entries'
@@ -19,8 +18,6 @@ class Entry(Base):
     title = sa.Column(sa.Unicode(127), nullable=False)
     text = sa.Column(sa.UnicodeText, nullable=False)
     created = sa.Column(sa.DateTime, nullable=False, default=datetime.datetime.utcnow)
-
-DATABASE_URL = os.environ.get('DATABASE_URL','postgresql://muoily@localhost:5432/learning-journal')
 
 def init_db():
     engine = sa.create_engine(DATABASE_URL)
