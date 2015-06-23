@@ -20,9 +20,11 @@ class Entry(Base):
     text = sa.Column(sa.UnicodeText, nullable=False)
     created = sa.Column(sa.DateTime, nullable=False, default=datetime.datetime.utcnow)
 
-    def __repr__(self):
-        return "<Entry(title='%s', created='%s', text='%s')>" % (self.title, self.created, self.text)
+DATABASE_URL = os.environ.get('DATABASE_URL','postgresql://muoily@localhost:5432/learning-journal')
 
+def init_db():
+    engine = sa.create_engine(DATABASE_URL)
+    Base.metadata.create_all(engine)
 
 @view_config(route_name='home', renderer='string')
 def home(request):
