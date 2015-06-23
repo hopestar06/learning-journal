@@ -12,6 +12,7 @@ from waitress import serve
 Base = declarative_base()
 DATABASE_URL = os.environ.get('DATABASE_URL','postgresql://muoily@localhost:5432/learning-journal')
 
+#Definiton of entries table
 class Entry(Base):
     __tablename__ = 'entries'
     id = sa.Column(sa.Integer, primary_key = True, autoincrement=True)
@@ -19,6 +20,7 @@ class Entry(Base):
     text = sa.Column(sa.UnicodeText, nullable=False)
     created = sa.Column(sa.DateTime, nullable=False, default=datetime.datetime.utcnow)
 
+#function to initialize the database
 def init_db():
     engine = sa.create_engine(DATABASE_URL)
     Base.metadata.create_all(engine)
