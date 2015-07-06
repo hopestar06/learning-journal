@@ -5,7 +5,7 @@ import datetime
 import sqlalchemy as sa
 from pyramid.authentication import AuthTktAuthenticationPolicy
 from pyramid.authorization import ACLAuthorizationPolicy
-
+from pyramid.security import remember, forget
 from sqlalchemy.ext.declarative import declarative_base
 from pyramid.httpexceptions import HTTPFound
 from sqlalchemy.exc import DBAPIError
@@ -15,6 +15,8 @@ from pyramid.config import Configurator
 from pyramid.view import view_config
 from waitress import serve
 from cryptacular.bcrypt import BCRYPTPasswordManager
+
+HERE = os.path.dirname(os.path.abspath(__file__))
 
 DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
 
@@ -59,6 +61,25 @@ def home(request):
     entries = Entry.all()
     return {'entries': entries}
 
+@view_config(route_name='login', renderer="templates/login.jinja2")
+def login(request):
+    """authenticate a user by username/password"""
+    username = request.params.get('username', '')
+    error = ''
+    if request.method == 'POST':
+        error = "Login Failed"
+        authenticated = False
+        try:
+            authenticated = do_login(request)
+        except ValueError as e:
+            error = str(e)
+
+        if authenticated:
+            headers = remember(request, username)
+            return HTTPFound(request.route_url('home'), headers=headers)
+
+    return {'error': error, 'username': username}
+
 
 @view_config(route_name='add', request_method='POST')
 def add_entry(request):
@@ -74,6 +95,12 @@ def db_exception(context, request):
     response = Response(context.message)
     response.status_int = 500
     return response
+
+
+@view_config(route_name='logout')
+def logout(request):
+    headers = forget(request)
+    return HTTPFound(request.route_url('home'), headers=headers)
 
 
 def do_login(request):
@@ -119,6 +146,9 @@ def main():
     config.include('pyramid_jinja2')
     config.add_route('home', '/')
     config.add_route('add', '/add')
+    config.add_route('login', '/login')
+    config.add_route('logout', '/logout')
+    config.add_static_view('static', os.path.join(HERE, 'static'))
     config.scan()
     app = config.make_wsgi_app()
     return app
